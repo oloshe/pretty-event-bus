@@ -1,6 +1,6 @@
 {
   "name": "pretty-event-bus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,6 +8,9 @@
   },
   "keywords": ["typescript", "eventbus"],
   "author": "jacob.jiang",
+  "repository": {
+    "url": "https://github.com/oloshe/pretty-event-bus"
+  },
   "license": "ISC",
   "devDependencies": {
     "typescript": "^5.5.4"
