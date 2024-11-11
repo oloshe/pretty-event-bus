@@ -9,6 +9,10 @@ type ListenerType<E> = {
 };
 type Bus<E> = Record<keyof E, ListenerType<E>[]>;
 type CancelFunc = () => void;
+
+/** 
+ * 获取 EventBus 的事件类型
+ */
 export type GetEventBusKey<T> = T extends EventBus<infer P> ? keyof P : unknown;
 
 export interface EventBus<T extends EventMap> {
@@ -24,7 +28,10 @@ export interface EventBus<T extends EventMap> {
     off<Key extends keyof T>(key: Key, handler: T[Key]): void;
     /** 触发事件 */
     emit<Key extends keyof T>(key: Key, ...payload: Parameters<T[Key]>): void;
+    /** 数据 */
     readonly bus: Partial<Bus<T>>;
+    /** 创建该eventbus时的时间戳，用于方便比较两个bus是否为同一个 */
+    readonly timestamp: number;
 }
 
 export interface BusListener {
@@ -33,7 +40,27 @@ export interface BusListener {
 }
 
 export interface EventBusOptions {
+    /** 是否打印在控制台 */
     log?: boolean | undefined;
+    /** 打印的实现方法 */
+    logger?: (data: LogData, ...payload: any[]) => void;
+}
+
+type LogData = LogDataOn | ILogData;
+
+interface LogDataOn {
+    action: 'on'
+    /** 键 */
+    key: string;
+    /** action为on时的类型 */
+    type: string;
+}
+
+interface ILogData {
+    /** 调用的方法 */
+    action: 'off' | 'emit';
+    /** 键 */
+    key: string;
 }
 
 /**
@@ -53,8 +80,11 @@ export interface EventBusOptions {
 export const EventBus = <T extends EventMap>(opt?: EventBusOptions): EventBus<T> => {
     const bus: Partial<Bus<T>> = {};
     const show_log = opt?.log ?? false;
+    const logFormat = opt?.logger || ((data, ...payload) => {
+        console.log(`[EVENT_BUS] ${data.action} ${data.key}`, ...payload);
+    });
     const on: EventBus<T>['on'] = (key, handler, name, type = 'DEFAULT') => {
-        show_log && console.log(`[EVENT_BUS].on,`, key, type);
+        show_log && logFormat({ action: 'on', key: String(key), type: type });
         if (!bus[key]) bus[key] = []; // 初始化
         bus[key]!.push({
             alias: name || 'anonymous',
@@ -67,8 +97,11 @@ export const EventBus = <T extends EventMap>(opt?: EventBusOptions): EventBus<T>
         return listener;
     };
     const off: EventBus<T>['off'] = (key, handler) => {
-        const index = bus[key]?.findIndex((item) => item.func === handler) ?? -1;
-        index !== -1 && bus[key]?.splice(index, 1);
+        const arr = bus[key];
+        if (!arr) return;
+        const index = arr.findIndex((item) => item.func === handler) ?? -1;
+        index !== -1 && arr.splice(index, 1);
+        show_log && logFormat({ action: 'off', key: String(key) })
     };
     const once: EventBus<T>['once'] = (key, handler) => {
         const handleOnce = (...payload: Parameters<typeof handler>) => {
@@ -87,7 +120,7 @@ export const EventBus = <T extends EventMap>(opt?: EventBusOptions): EventBus<T>
         return on(key, handler, name, 'STACK');
     };
     const emit: EventBus<T>['emit'] = (key, ...payload) => {
-        show_log && console.log('[EVENT_BUS].emit', key, ...payload);
+        show_log && logFormat({ action: 'emit', key: String(key) }, ...payload);
         const arr = bus[key];
         if (!arr) return;
         let stack_fn: T[keyof T] | undefined;
@@ -118,7 +151,7 @@ export const EventBus = <T extends EventMap>(opt?: EventBusOptions): EventBus<T>
             }
         }
     };
-    return { on, once, emit, off, on_unique, on_stack, bus } as EventBus<T>;
+    return { on, once, emit, off, on_unique, on_stack, bus, timestamp: Date.now() } as EventBus<T>;
 };
 
 export interface BusListeners {

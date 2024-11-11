@@ -1,10 +1,10 @@
 {
   "name": "pretty-event-bus",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc index.ts"
+    "build": "npx tsc"
   },
   "keywords": ["typescript", "eventbus"],
   "author": "jacob.jiang",
