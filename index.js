@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventBusListeners = exports.EventBus = void 0;
+exports.PrettyEventBus = exports.EventBusListeners = exports.EventBus = void 0;
 /**
  * 创建一个EventBus，用于事件订阅
  * @example
@@ -26,11 +26,18 @@ const EventBus = (opt) => {
         show_log && logFormat({ action: 'on', key: String(key), type: type });
         if (!bus[key])
             bus[key] = []; // 初始化
-        bus[key].push({
-            alias: name || 'anonymous',
-            func: handler,
-            type: type,
-        });
+        const data = bus[key].find(item => item.alias === name);
+        if (data) {
+            data.func = handler;
+            data.type = type;
+        }
+        else {
+            bus[key].push({
+                alias: name || '@anonymous',
+                func: handler,
+                type: type,
+            });
+        }
         const listener = {
             cancel: () => off(key, handler),
         };
@@ -107,3 +114,8 @@ const EventBusListeners = () => {
     return { push, destory };
 };
 exports.EventBusListeners = EventBusListeners;
+class PrettyEventBus {
+    constructor() {
+    }
+}
+exports.PrettyEventBus = PrettyEventBus;

@@ -16,7 +16,7 @@ type CancelFunc = () => void;
 export type GetEventBusKey<T> = T extends EventBus<infer P> ? keyof P : unknown;
 
 export interface EventBus<T extends EventMap> {
-    /** 监听事件 */
+    /** 监听事件 name 一致则会覆盖方法 */
     on<Key extends keyof T>(key: Key, handler: T[Key], name?: string, type?: ListenType): BusListener;
     /** 监听事件，如果有重复的，则不执行后面监听 */
     on_unique<Key extends keyof T>(key: Key, handler: T[Key], name?: string): BusListener;
@@ -86,11 +86,17 @@ export const EventBus = <T extends EventMap>(opt?: EventBusOptions): EventBus<T>
     const on: EventBus<T>['on'] = (key, handler, name, type = 'DEFAULT') => {
         show_log && logFormat({ action: 'on', key: String(key), type: type });
         if (!bus[key]) bus[key] = []; // 初始化
-        bus[key]!.push({
-            alias: name || 'anonymous',
-            func: handler,
-            type: type,
-        });
+        const data = bus[key].find(item => item.alias === name);
+        if (data) {
+            data.func = handler;
+            data.type = type;
+        } else {
+            bus[key]!.push({
+                alias: name || '@anonymous',
+                func: handler,
+                type: type,
+            });
+        }
         const listener: BusListener = {
             cancel: () => off(key, handler),
         };
@@ -164,4 +170,10 @@ export const EventBusListeners = (): BusListeners => {
     const push = (...item: BusListener[]) => list.push(...item);
     const destory = () => list.splice(0, list.length).forEach(item => item.cancel());
     return { push, destory };
+}
+
+export class PrettyEventBus {
+    constructor() {
+        
+    }
 }
