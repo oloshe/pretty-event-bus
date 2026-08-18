@@ -1,14 +1,72 @@
 {
   "name": "pretty-event-bus",
-  "version": "1.1.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "npx tsc"
+  "version": "2.0.0",
+  "packageManager": "pnpm@10.14.0",
+  "description": "轻量、类型安全并支持可选 Vite HMR 的事件总线",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    },
+    "./listeners": {
+      "types": "./dist/types/listeners.d.ts",
+      "import": "./dist/esm/listeners.js",
+      "require": "./dist/cjs/listeners.js",
+      "default": "./dist/cjs/listeners.js"
+    },
+    "./vite": {
+      "types": "./dist/types/vite.d.ts",
+      "import": "./dist/esm/vite.js",
+      "require": "./dist/cjs/vite.js",
+      "default": "./dist/cjs/vite.js"
+    },
+    "./index.js": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "keywords": ["typescript", "eventbus"],
+  "typesVersions": {
+    "*": {
+      "listeners": ["dist/types/listeners.d.ts"],
+      "vite": ["dist/types/vite.d.ts"],
+      "*": ["dist/types/index.d.ts"]
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "clean": "node scripts/clean-build.mjs",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "pnpm run clean && pnpm run build:esm && pnpm run build:cjs && node scripts/finalize-build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:runtime": "node --test --experimental-test-coverage --test-coverage-include=dist/cjs/**/*.js --test-coverage-lines=100 --test-coverage-functions=100 --test-coverage-branches=100 tests/*.test.cjs",
+    "test:types": "node scripts/test-package-types.mjs",
+    "test": "pnpm run build && pnpm run test:runtime && pnpm run test:types",
+    "prepack": "pnpm run build"
+  },
+  "keywords": [
+    "typescript",
+    "eventbus",
+    "events",
+    "vite",
+    "hmr"
+  ],
   "author": "jacob.jiang",
   "repository": {
+    "type": "git",
     "url": "https://github.com/oloshe/pretty-event-bus"
   },
   "license": "ISC",
